@@ -1,13 +1,20 @@
 /* Imports: Internal */
 import { Logger } from './utils/logger'
 
+type OptionSettings<TOptions> = {
+  [P in keyof TOptions]?: {
+    default?: TOptions[P]
+    validate?: (val: any) => boolean
+  }
+}
+
 /**
  * Base for other "Service" objects. Handles your standard initialization process, can dynamically
  * start and stop.
  */
 export class BaseService<TServiceOptions> {
   protected name: string
-  protected defaultOptions: Partial<TServiceOptions>
+  protected optionSettings: OptionSettings<TServiceOptions>
   protected logger: Logger
   protected initialized: boolean = false
   protected running: boolean = false
@@ -15,12 +22,7 @@ export class BaseService<TServiceOptions> {
   /**
    * @param options Options to pass to the service.
    */
-  constructor(protected options: TServiceOptions) {
-    this.options = {
-      ...this.defaultOptions,
-      ...this.options,
-    }
-  }
+  constructor(protected options: TServiceOptions) {}
 
   /**
    * Initializes the service.
@@ -30,8 +32,17 @@ export class BaseService<TServiceOptions> {
       return
     }
 
+    // Apparently I'm going crazy and just now finding out that class variables are undefined
+    // within the constructor? Anyway, this means I have to do all of this initialization logic
+    // during a separate init function or everything is undefined.
+    if (this.logger === undefined) {
+      this.logger = new Logger(this.name)
+    }
+
+    this._mergeDefaultOptions()
+    this._validateOptions()
+
     this.initialized = true
-    this.logger = new Logger(this.name)
 
     try {
       this.logger.status('Service is initializing...')
@@ -51,8 +62,11 @@ export class BaseService<TServiceOptions> {
       return
     }
 
+    if (this.logger === undefined) {
+      this.logger = new Logger(this.name)
+    }
+
     this.running = true
-    this.logger = new Logger(this.name)
 
     this.logger.status('Service is starting...')
     await this.init()
@@ -94,5 +108,56 @@ export class BaseService<TServiceOptions> {
    */
   protected async _stop(): Promise<void> {
     return
+  }
+
+  /**
+   * Combines user provided and default options. Honestly there's no point for this function to
+   * live within this class and be all stateful, but I didn't realize that until after I wrote it.
+   * So we're gonna have to deal with that for now. Whatever, it's an easy fix if anyone else
+   * feels like tackling it.
+   */
+  private _mergeDefaultOptions(): void {
+    if (this.optionSettings === undefined) {
+      return
+    }
+
+    for (const optionName of Object.keys(this.optionSettings)) {
+      const optionDefault = this.optionSettings[optionName].default
+      if (optionDefault === undefined) {
+        continue
+      }
+
+      if (this.options[optionName] !== undefined) {
+        continue
+      }
+
+      // TODO: Maybe make a copy of this default instead of directly assigning?
+      this.options[optionName] = optionDefault
+    }
+  }
+
+  /**
+   * Performs option validation against the option settings attached to this class. Another
+   * function that really shouldn't be part of this class in particular. Good mini project though!
+   */
+  private _validateOptions(): void {
+    if (this.optionSettings === undefined) {
+      return
+    }
+
+    for (const optionName of Object.keys(this.optionSettings)) {
+      const optionValidationFunction = this.optionSettings[optionName].validate
+      if (optionValidationFunction === undefined) {
+        continue
+      }
+
+      const optionValue = this.options[optionName]
+
+      if (optionValidationFunction(optionValue) === false) {
+        throw new Error(
+          `Provided input for option "${optionName}" is invalid: ${optionValue}`
+        )
+      }
+    }
   }
 }
