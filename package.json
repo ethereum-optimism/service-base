@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc -p .",
-    "lint": "tslint --format stylish --project . && yarn lint:fix",
+    "lint": "yarn lint:fix && tslint --format stylish --project .",
     "lint:fix": "prettier --config prettier-config.json --write \"{src,exec,test}/**/*.ts\"",
     "clean": "rimraf build/",
     "test": "echo 'no tests'"
