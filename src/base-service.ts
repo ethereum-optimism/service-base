@@ -1,5 +1,5 @@
 /* Imports: Internal */
-import { Logger } from './utils/logger'
+import { Logger } from '@eth-optimism/core-utils'
 
 type OptionSettings<TOptions> = {
   [P in keyof TOptions]?: {
