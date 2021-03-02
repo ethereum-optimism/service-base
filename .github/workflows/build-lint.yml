@@ -26,7 +26,7 @@ jobs:
       # START DEPENDENCY CACHING
       - name: Cache deps
         uses: actions/cache@v1
-        id: cache_core-utils
+        id: cache_service-base
         with:
           path: node_modules
           key: ${{ runner.os }}-${{ matrix.node }}-${{ hashFiles('package.json') }}
