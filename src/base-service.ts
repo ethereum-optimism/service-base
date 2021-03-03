@@ -127,7 +127,10 @@ export class BaseService<TServiceOptions> {
         continue
       }
 
-      if (this.options[optionName] !== undefined) {
+      if (
+        this.options[optionName] !== undefined &&
+        this.options[optionName] !== null
+      ) {
         continue
       }
 
