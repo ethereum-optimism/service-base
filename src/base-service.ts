@@ -36,7 +36,7 @@ export class BaseService<TServiceOptions> {
     // within the constructor? Anyway, this means I have to do all of this initialization logic
     // during a separate init function or everything is undefined.
     if (this.logger === undefined) {
-      this.logger = new Logger(this.name)
+      this.logger = new Logger({name: this.name})
     }
 
     this._mergeDefaultOptions()
@@ -45,9 +45,9 @@ export class BaseService<TServiceOptions> {
     this.initialized = true
 
     try {
-      this.logger.status('Service is initializing...')
+      this.logger.info('Service is initializing...')
       await this._init()
-      this.logger.status('Service has initialized.')
+      this.logger.info('Service has initialized.')
     } catch (err) {
       this.initialized = false
       throw err
@@ -63,15 +63,15 @@ export class BaseService<TServiceOptions> {
     }
 
     if (this.logger === undefined) {
-      this.logger = new Logger(this.name)
+      this.logger = new Logger({name: this.name})
     }
 
     this.running = true
 
-    this.logger.status('Service is starting...')
+    this.logger.info('Service is starting...')
     await this.init()
     await this._start()
-    this.logger.status('Service has started')
+    this.logger.info('Service has started')
   }
 
   /**
@@ -82,9 +82,9 @@ export class BaseService<TServiceOptions> {
       return
     }
 
-    this.logger.status('Service is stopping...')
+    this.logger.info('Service is stopping...')
     await this._stop()
-    this.logger.status('Service has stopped')
+    this.logger.info('Service has stopped')
 
     this.running = false
   }
